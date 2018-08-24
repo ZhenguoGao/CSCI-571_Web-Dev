@@ -1,0 +1,123 @@
+
+<html>
+    <head>
+        <title>XML-parser</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+            }
+            
+            #wrapper {
+                text-align: center;
+                width: 400px;
+                margin: 0 auto;
+                margin-top: 100px;
+                margin-bottom:auto;
+                font-family: "Trebuchet MS", Helvetica, sans-serif;
+            }
+            form#i{
+                text-align: center;
+                margin-top: 100px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="wrapper">
+        <form id="i">
+            <p><b>Enter URL for Newpaper List XML File</b></p>
+            <p><input type="text" size="30" id="url-of-text"></p>
+            <p><input type="submit" size="12" value="Submit Query" id="sub" onclick="main()"></p>
+        </form>
+        </div>
+        <script>
+            function main() {
+                var u = document.getElementById("url-of-text").value;
+				if(u == "") {
+					alert("Please enter the URL");
+					return;
+				}
+                 var xhttp;
+                
+                if (window.XMLHttpRequest) {
+                    xhttp = new XMLHttpRequest();
+                } else {
+                    // code for older browsers
+                    xhttp = new ActiveXObject("Microsoft.XMLHTTP");
+                }
+                
+                xhttp.onreadystatechange = function() {
+                    if (xhttp.readyState == 4) {
+                        if(xhttp.status == 200) {
+                            ChangeXMLtoHTML(xhttp.responseXML);
+                        } else if(xhttp.status == 404) {
+                            alert('XML file does not exist.');
+                        }
+                    }
+                };
+                
+                xhttp.open("GET", u, false);
+                xhttp.send();
+            }
+            
+            
+            
+            function ChangeXMLtoHTML(xmlDocument){
+                try{
+                    var workbook = xmlDocument.documentElement;
+                    if(workbook.tagName != "Workbook") {
+                        throw "No Workbook node.";
+                    }
+                    var table = workbook.getElementsByTagName("Table")[0];
+                    var html = "<html><table width=\"960\" border=\"2\">";
+                    
+                   
+                    var header = table.getElementsByTagName("Header")[0];
+                    var datas = header.getElementsByTagName("Data");
+                    html += "<thead style=\" text-align:center\"><tr>";
+                    
+                    for(k = 0; k < datas.length; k++) {
+                        html += "<td>" + datas[k].innerHTML + "</td>";
+                    }
+                    
+                    html += "</tr></thead>";
+                     var rows = table.getElementsByTagName("Row");
+                    if(!rows || rows.length == 0) {
+                        throw "No Radio station.";
+                    }
+                    html +="<tbody>"
+                    for(i = 0; i < rows.length; i++) {
+                        html+="<tr>";
+                        html+="<td>"+rows[i].getElementsByTagName("Slot")[0].innerHTML+"</td>";
+                        html+="<td>"+rows[i].getElementsByTagName("Newspaper")[0].innerHTML+"</td>";
+                        html+="<td><ul>";
+                    var l=rows[i].getElementsByTagName("Location")[0].childNodes;
+                        for(m=0; m<l.length; m++){
+                            if(l[m].nodeType==1){
+                                html+="<li>"+l[m].innerHTML+"</li>";
+                            }
+                        }
+                        html+="</ul></td>";
+                    var homepage= rows[i].getElementsByTagName("HomePage")[0].innerHTML;
+                        html+="<td><a href=\""+homepage+"\">"+homepage+"</a></td>";
+                    var logo=rows[i].getElementsByTagName("Logo")[0].innerHTML; 
+                        html+="<td><img height=\"100\" width=\"200\" src=\""+logo+"\"/></td>"
+                    html+="</tr>"
+                    
+                    }
+                    
+                    html += "</tbody></table></html>";
+                    popup(html);
+                     } catch(err) {
+                    alert("Error in XML file: " + err);
+                }
+            }
+            function popup(html) {
+                var popWin = window.open("", "XML->Table", "scrollbars=yes, toolbar=no, titlebar=no, resizable=yes, top=200, left=500, width=1000, height=400");
+                popWin.document.write(html);
+            }
+            
+        </script>
+    <noscript>
+    </body>
+</html>
